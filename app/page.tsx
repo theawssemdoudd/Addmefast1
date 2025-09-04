@@ -1,44 +1,29 @@
-'use client'
+"use client";
+import { useState } from "react";
 
-import WebApp from '@twa-dev/sdk'
-import { useEffect, useState } from 'react'
-
-// Define the interface for user data
-interface UserData {
-  id: number;
-  first_name: string;
-  last_name?: string;
-  username?: string;
-  language_code: string;
-  is_premium?: boolean;
-}
-
-export default function Home() {
-  const [userData, setUserData] = useState<UserData | null>(null)
-
-  useEffect(() => {
-    if (WebApp.initDataUnsafe.user) {
-      setUserData(WebApp.initDataUnsafe.user as UserData)
-    }
-  }, [])
+export default function Dashboard() {
+  const [activeTab, setActiveTab] = useState("home");
 
   return (
-    <main className="p-4">
-      {userData ? (
-        <>
-          <h1 className="text-2xl font-bold mb-4">User Data</h1>
-          <ul>
-            <li>ID: {userData.id}</li>
-            <li>First Name: {userData.first_name}</li>
-            <li>Last Name: {userData.last_name || 'N/A'}</li>
-            <li>Username: {userData.username || 'N/A'}</li>
-            <li>Language Code: {userData.language_code}</li>
-            <li>Is Premium: {userData.is_premium ? 'Yes' : 'No'}</li>
-          </ul>
-        </>
-      ) : (
-        <div>Loading...</div>
-      )}
-    </main>
-  )
+    <div className="flex min-h-screen bg-gray-100">
+      {/* Sidebar */}
+      <aside className="w-64 bg-gray-800 text-white p-4 space-y-4">
+        <h1 className="text-2xl font-bold">🚀 AddMeFast Clone</h1>
+        <nav className="space-y-2">
+          <button onClick={() => setActiveTab("home")} className="block w-full text-left hover:bg-gray-700 p-2 rounded">🏠 الرئيسية</button>
+          <button onClick={() => setActiveTab("tasks")} className="block w-full text-left hover:bg-gray-700 p-2 rounded">✅ مهامي</button>
+          <button onClick={() => setActiveTab("points")} className="block w-full text-left hover:bg-gray-700 p-2 rounded">⭐ رصيدي</button>
+          <button onClick={() => setActiveTab("settings")} className="block w-full text-left hover:bg-gray-700 p-2 rounded">⚙️ الإعدادات</button>
+        </nav>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 p-6">
+        {activeTab === "home" && <h2 className="text-xl font-semibold">مرحبًا بك 👋</h2>}
+        {activeTab === "tasks" && <h2 className="text-xl font-semibold">قائمة المهام</h2>}
+        {activeTab === "points" && <h2 className="text-xl font-semibold">رصيد نقاطك</h2>}
+        {activeTab === "settings" && <h2 className="text-xl font-semibold">الإعدادات</h2>}
+      </main>
+    </div>
+  );
 }
