@@ -1,17 +1,23 @@
-// api/auth/login.js
+import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { connectDB } from "../../lib/db.js";
-import { User } from "../../lib/models.js";
-import { signToken } from "../../lib/auth.js";
+import { connectDB } from "@/lib/db";
+import User from "@/lib/models";
+import { signToken } from "@/lib/auth";
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).end();
-  await connectDB();
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
-  if (!user) return res.status(400).json({ error: "no user" });
-  const ok = await bcrypt.compare(password, user.passwordHash);
-  if (!ok) return res.status(400).json({ error: "bad creds" });
-  const token = signToken(user);
-  res.json({ token });
+export async function POST(req) {
+  try {
+    const { username, password } = await req.json();
+
+    await connectDB();
+    const user = await User.findOne({ username });
+    if (!user) throw new Error("User not found");
+
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) throw new Error("Invalid password");
+
+    const token = signToken(user);
+    return NextResponse.json({ ok: true, token });
+  } catch (error) {
+    return NextResponse.json({ ok: false, error: error.message }, { status: 401 });
+  }
 }
