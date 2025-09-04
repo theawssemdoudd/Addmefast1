@@ -1,10 +1,11 @@
-import { connectDB } from "../lib/db.js";
+import { NextResponse } from "next/server";
+import { connectDB } from "@/lib/db";
 
-export default async function handler(req, res) {
+export async function GET() {
   try {
-    const db = await connectDB();
-    res.status(200).json({ ok: true, message: "Connected to MongoDB ✅" });
-  } catch (err) {
-    res.status(500).json({ ok: false, error: err.message });
+    await connectDB();
+    return NextResponse.json({ ok: true, message: "Connected to MongoDB ✅" });
+  } catch (error) {
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
 }
