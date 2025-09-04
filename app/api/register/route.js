@@ -1,21 +1,18 @@
-// api/auth/register.js
+import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { connectDB } from "../../lib/db.js";
-import { User } from "../../lib/models.js";
-import { signToken } from "../../lib/auth.js";
+import { connectDB } from "@/lib/db";
+import User from "@/lib/models";
 
-export default async function handler(req, res) {
-  if (req.method !== "POST") return res.status(405).end();
-  await connectDB();
-  const { email, password, username } = req.body;
-  if (!email || !password) return res.status(400).json({ error: "missing" });
-
+export async function POST(req) {
   try {
-    const hash = await bcrypt.hash(password, 10);
-    const user = await User.create({ email, username, passwordHash: hash });
-    const token = signToken(user);
-    res.json({ token });
-  } catch (err) {
-    res.status(400).json({ error: "user exists or bad" });
+    const { username, password } = await req.json();
+
+    await connectDB();
+    const hashed = await bcrypt.hash(password, 10);
+
+    const newUser = await User.create({ username, password: hashed });
+    return NextResponse.json({ ok: true, user: newUser });
+  } catch (error) {
+    return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
   }
 }
