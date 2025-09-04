@@ -1,9 +1,13 @@
-// api/tasks.js
-import { connectDB } from "../lib/db.js";
-import { Task } from "../lib/models.js";
+import { NextResponse } from "next/server";
+import { connectDB } from "@/lib/db";
+import User from "@/lib/models";
 
-export default async function handler(req, res) {
-  await connectDB();
-  const tasks = await Task.find({ active: true });
-  res.json(tasks);
+export async function GET() {
+  try {
+    await connectDB();
+    const users = await User.find({});
+    return NextResponse.json(users);
+  } catch (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
