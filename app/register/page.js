@@ -1,62 +1,28 @@
-"use client";
-import { useState } from "react";
+// داخل app/register/page.js (client component)
+const handleRegister = async (e) => {
+  e.preventDefault();
+  setMessage("⏳ Processing...");
 
-export default function RegisterPage() {
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+  try {
+    console.log("Sending register request:", { username, email, password });
+    const res = await fetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, email, password }),
+    });
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setMessage("⏳ Processing...");
+    console.log("Response status:", res.status);
+    const text = await res.text();
+    console.log("Raw response text:", text);
 
-    try {
-      const res = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, email, password }),
-      });
+    let data;
+    try { data = JSON.parse(text); } catch (ex) { data = { ok: false, message: text }; }
 
-      const data = await res.json();
-      setMessage(data.message);
-    } catch (err) {
-      setMessage("⚠️ Something went wrong");
-    }
-  };
+    console.log("Parsed response:", data);
+    setMessage(data.message || (data.error || "No message returned"));
 
-  return (
-    <div style={{ padding: "20px" }}>
-      <h1>📝 Register</h1>
-      <form onSubmit={handleRegister}>
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          required
-        /><br /><br />
-        
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        /><br /><br />
-
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        /><br /><br />
-
-        <button type="submit">Register</button>
-      </form>
-
-      {message && <p>{message}</p>}
-    </div>
-  );
-      }
+  } catch (err) {
+    console.error("Register client error:", err);
+    setMessage("⚠️ Something went wrong (client). See console.");
+  }
+};
