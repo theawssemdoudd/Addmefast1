@@ -1,28 +1,64 @@
-// داخل app/register/page.js (client component)
-const handleRegister = async (e) => {
-  e.preventDefault();
-  setMessage("⏳ Processing...");
+"use client";   // 👈 لازم يجي أول شيء
 
-  try {
-    console.log("Sending register request:", { username, email, password });
-    const res = await fetch("/api/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, email, password }),
-    });
+import { useState } from "react";
 
-    console.log("Response status:", res.status);
-    const text = await res.text();
-    console.log("Raw response text:", text);
+export default function RegisterPage() {
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
 
-    let data;
-    try { data = JSON.parse(text); } catch (ex) { data = { ok: false, message: text }; }
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setMessage("⏳ Processing...");
 
-    console.log("Parsed response:", data);
-    setMessage(data.message || (data.error || "No message returned"));
+    try {
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, password }),
+      });
 
-  } catch (err) {
-    console.error("Register client error:", err);
-    setMessage("⚠️ Something went wrong (client). See console.");
+      const data = await res.json();
+      setMessage(data.message);
+    } catch (err) {
+      console.error("Register client error:", err);
+      setMessage("⚠️ Something went wrong (client). See console.");
+    }
+  };
+
+  return (
+    <div style={{ padding: "20px" }}>
+      <h1>📝 Register</h1>
+      <form onSubmit={handleRegister}>
+        <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+        /><br /><br />
+
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        /><br /><br />
+
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        /><br /><br />
+
+        <button type="submit">Register</button>
+      </form>
+
+      {message && <p>{message}</p>}
+    </div>
+  );
   }
-};
