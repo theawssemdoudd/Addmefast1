@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 export default function RegisterPage() {
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -13,14 +14,14 @@ export default function RegisterPage() {
     const res = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ username, email, password }),
     });
 
     const data = await res.json();
     if (data.ok) {
       setMessage("✅ Registered successfully!");
     } else {
-      setMessage("❌ " + data.error);
+      setMessage("❌ " + (data.error || "Unexpected error"));
     }
   };
 
@@ -28,6 +29,14 @@ export default function RegisterPage() {
     <div style={{ maxWidth: 400, margin: "2rem auto", textAlign: "center" }}>
       <h1>Register</h1>
       <form onSubmit={handleRegister}>
+        <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+          style={{ display: "block", margin: "0.5rem auto", padding: "0.5rem" }}
+        />
         <input
           type="email"
           placeholder="Email"
