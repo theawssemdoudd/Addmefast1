@@ -1,5 +1,4 @@
 "use client";
-
 import { useState } from "react";
 
 export default function RegisterPage() {
@@ -10,24 +9,25 @@ export default function RegisterPage() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setMessage("⏳ Processing...");
 
-    const res = await fetch("/api/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, email, password }),
-    });
+    try {
+      const res = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, password }),
+      });
 
-    const data = await res.json();
-    if (data.ok) {
-      setMessage("✅ Registered successfully!");
-    } else {
-      setMessage("❌ " + (data.error || "Unexpected error"));
+      const data = await res.json();
+      setMessage(data.message);
+    } catch (err) {
+      setMessage("⚠️ Something went wrong");
     }
   };
 
   return (
-    <div style={{ maxWidth: 400, margin: "2rem auto", textAlign: "center" }}>
-      <h1>Register</h1>
+    <div style={{ padding: "20px" }}>
+      <h1>📝 Register</h1>
       <form onSubmit={handleRegister}>
         <input
           type="text"
@@ -35,27 +35,28 @@ export default function RegisterPage() {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           required
-          style={{ display: "block", margin: "0.5rem auto", padding: "0.5rem" }}
-        />
+        /><br /><br />
+        
         <input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          style={{ display: "block", margin: "0.5rem auto", padding: "0.5rem" }}
-        />
+        /><br /><br />
+
         <input
           type="password"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          style={{ display: "block", margin: "0.5rem auto", padding: "0.5rem" }}
-        />
+        /><br /><br />
+
         <button type="submit">Register</button>
       </form>
-      <p>{message}</p>
+
+      {message && <p>{message}</p>}
     </div>
   );
-            }
+      }
