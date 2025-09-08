@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { db } from "../lib/firebase";
 import { collection, addDoc, getDocs } from "firebase/firestore";
 
@@ -35,16 +35,20 @@ export default function Tasks() {
 
   // ✅ جلب المهام من Firestore
   const fetchTasks = async () => {
-    const querySnapshot = await getDocs(collection(db, "tasks"));
-    const tasksData = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    setTasks(tasksData);
+    try {
+      const querySnapshot = await getDocs(collection(db, "tasks"));
+      const tasksData = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setTasks(tasksData);
+    } catch (err) {
+      console.error("خطأ أثناء جلب المهام:", err);
+    }
   };
 
-  // جلب المهام عند تحميل الصفحة
-  useState(() => {
+  // ✅ استخدم useEffect بدل useState
+  useEffect(() => {
     fetchTasks();
   }, []);
 
@@ -116,4 +120,4 @@ export default function Tasks() {
       </div>
     </div>
   );
-              }
+    }
