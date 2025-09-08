@@ -1,56 +1,65 @@
-import { useEffect, useState } from "react";
-import { db } from "../lib/firebase";
-import { collection, getDocs } from "firebase/firestore";
+// pages/earn.js
+"use client";
 
-export default function Earn() {
+import { useState, useEffect } from "react";
+import { db, auth } from "../lib/firebase";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { useAuthState } from "react-firebase-hooks/auth";
+
+export default function EarnPage() {
+  const [user] = useAuthState(auth);
   const [tasks, setTasks] = useState([]);
 
-  useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const querySnapshot = await getDocs(collection(db, "tasks"));
-        const tasksData = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setTasks(tasksData);
-      } catch (error) {
-        console.error("❌ خطأ أثناء جلب المهام:", error);
+  // 🟢 جلب المهام من جميع المستخدمين باستثناء المستخدم الحالي
+  const fetchTasks = async () => {
+    try {
+      let q;
+      if (user) {
+        q = query(collection(db, "tasks"), where("userId", "!=", user.uid));
+      } else {
+        q = collection(db, "tasks"); // لو الزائر موش مسجل دخول، نعرض كل المهام
       }
-    };
 
+      const querySnapshot = await getDocs(q);
+      const tasksData = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setTasks(tasksData);
+    } catch (error) {
+      console.error("خطأ في جلب المهام:", error);
+    }
+  };
+
+  useEffect(() => {
     fetchTasks();
-  }, []);
+  }, [user]);
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="text-2xl font-bold text-center mb-6">💰 المهام المتاحة للربح</h1>
+    <div className="max-w-4xl mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6 text-center">💰 كسب النقاط</h1>
 
       {tasks.length === 0 ? (
-        <p className="text-center text-gray-500">لا توجد مهام متاحة حالياً</p>
+        <p className="text-gray-500 text-center">لا توجد مهام متاحة حاليا</p>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <ul className="space-y-4">
           {tasks.map((task) => (
-            <div
+            <li
               key={task.id}
-              className="bg-white p-4 rounded-xl shadow-md hover:shadow-lg transition"
+              className="p-4 border rounded-lg shadow-sm flex justify-between items-center bg-white"
             >
-              <h2 className="text-lg font-bold mb-2">{task.title}</h2>
-              <p className="text-sm text-gray-600 mb-2">
-                📂 القسم: {task.category}
-              </p>
-              <p className="text-sm text-gray-600 mb-2">
-                👥 عدد النقرات المطلوبة: {task.clicks}
-              </p>
-              <p className="text-sm text-green-600 font-semibold mb-4">
-                💎 النقاط لكل نقرة: {task.points}
-              </p>
-              <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                إنجاز المهمة ✅
+              <div>
+                <p className="font-bold text-lg">{task.title}</p>
+                <p className="text-sm text-gray-500">
+                  📂 {task.category} | 🎯 {task.clicks} نقرة | ⭐ {task.points} نقطة
+                </p>
+              </div>
+              <button className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                تنفيذ المهمة
               </button>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );
