@@ -1,9 +1,9 @@
 "use client";
 import { useState, useEffect } from "react";
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore, collection, addDoc, getDocs } from "firebase/firestore";
 
-// ✅ إعداد Firebase مباشرة هنا
+// ✅ إعداد Firebase مع حماية من التكرار
 const firebaseConfig = {
   apiKey: "AIzaSyBR3RiVIGpBwmFbwycC9amdh9x6KqCir_M",
   authDomain: "hasmen-8eba0.firebaseapp.com",
@@ -14,7 +14,7 @@ const firebaseConfig = {
   measurementId: "G-70RKFK8HGX",
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 export default function Tasks() {
