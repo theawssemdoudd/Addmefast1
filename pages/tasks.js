@@ -1,5 +1,3 @@
-// pages/tasks.js
-"use client";
 
 import { useState, useEffect } from "react";
 import { db, auth } from "../lib/firebase";
