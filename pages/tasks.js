@@ -1,133 +1,165 @@
+// pages/tasks.js
 "use client";
+
 import { useState, useEffect } from "react";
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore, collection, addDoc, getDocs } from "firebase/firestore";
+import { db, auth } from "../lib/firebase";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  serverTimestamp,
+} from "firebase/firestore";
+import { useAuthState } from "react-firebase-hooks/auth";
 
-// ✅ إعداد Firebase مع حماية من التكرار
-const firebaseConfig = {
-  apiKey: "AIzaSyBR3RiVIGpBwmFbwycC9amdh9x6KqCir_M",
-  authDomain: "hasmen-8eba0.firebaseapp.com",
-  projectId: "hasmen-8eba0",
-  storageBucket: "hasmen-8eba0.firebasestorage.app",
-  messagingSenderId: "992187142687",
-  appId: "1:992187142687:web:c24dd992ed61ee80d43b2a",
-  measurementId: "G-70RKFK8HGX",
-};
-
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-export default function Tasks() {
-  const [taskName, setTaskName] = useState("");
-  const [category, setCategory] = useState("Facebook");
-  const [clicks, setClicks] = useState(0);
-  const [points, setPoints] = useState(1);
+export default function TasksPage() {
+  const [user] = useAuthState(auth);
   const [tasks, setTasks] = useState([]);
+  const [title, setTitle] = useState("");
+  const [category, setCategory] = useState("فيسبوك");
+  const [clicks, setClicks] = useState("");
+  const [points, setPoints] = useState("");
 
-  // ✅ إضافة مهمة جديدة
-  const addTask = async () => {
-    if (!taskName.trim()) return;
+  // 🟢 إنشاء مهمة جديدة
+  const handleCreateTask = async () => {
+    if (!user) {
+      alert("❌ يجب تسجيل الدخول أولاً");
+      return;
+    }
+    if (!title || !clicks || !points) {
+      alert("⚠️ يرجى إدخال جميع الحقول");
+      return;
+    }
+
     try {
       await addDoc(collection(db, "tasks"), {
-        taskName,
+        title,
         category,
-        clicks,
-        points,
-        createdAt: new Date(),
+        clicks: Number(clicks),
+        points: Number(points),
+        userId: user.uid, // 🔹 ربط المهمة بالمستخدم الحالي
+        createdAt: serverTimestamp(),
       });
-      alert("✅ تمت إضافة المهمة!");
-      setTaskName("");
-      setClicks(0);
-      setPoints(1);
-      fetchTasks();
+      alert("✅ تم إنشاء المهمة");
+      setTitle("");
+      setClicks("");
+      setPoints("");
+      fetchTasks(); // إعادة تحميل المهام بعد الإضافة
     } catch (error) {
-      console.error("❌ خطأ أثناء الإضافة:", error);
+      console.error("خطأ في إنشاء المهمة:", error);
     }
   };
 
-  // ✅ جلب المهام
+  // 🟢 جلب المهام الخاصة بالمستخدم الحالي
   const fetchTasks = async () => {
+    if (!user) return;
     try {
-      const querySnapshot = await getDocs(collection(db, "tasks"));
+      const q = query(
+        collection(db, "tasks"),
+        where("userId", "==", user.uid)
+      );
+      const querySnapshot = await getDocs(q);
       const tasksData = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
       setTasks(tasksData);
-    } catch (err) {
-      console.error("خطأ أثناء الجلب:", err);
+    } catch (error) {
+      console.error("خطأ في جلب المهام:", error);
     }
   };
 
   useEffect(() => {
     fetchTasks();
-  }, []);
+  }, [user]);
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-red-500 font-bold text-lg">
+          ❌ يجب تسجيل الدخول لعرض أو إنشاء مهامك
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-lg mx-auto bg-white shadow-lg rounded-lg p-6">
-        <h1 className="text-2xl font-bold mb-4 text-center">✍️ إنشاء مهمة</h1>
+    <div className="max-w-3xl mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6 text-center">📌 مهامي</h1>
 
-        {/* إدخال بيانات المهمة */}
-        <div className="space-y-3">
+      {/* 🔹 إنشاء مهمة جديدة */}
+      <div className="bg-white shadow-md rounded-lg p-4 mb-6">
+        <h2 className="text-xl font-semibold mb-4">➕ إنشاء مهمة جديدة</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
             type="text"
-            value={taskName}
-            onChange={(e) => setTaskName(e.target.value)}
             placeholder="اسم المهمة"
-            className="w-full border rounded p-2"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="border rounded-lg p-2"
           />
-
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full border rounded p-2"
+            className="border rounded-lg p-2"
           >
-            <option>Facebook</option>
-            <option>Instagram</option>
-            <option>YouTube</option>
-            <option>LinkedIn</option>
-            <option>TikTok</option>
+            <option>فيسبوك</option>
+            <option>يوتيوب</option>
+            <option>إنستغرام</option>
+            <option>لينكدإن</option>
+            <option>تيك توك</option>
           </select>
-
           <input
             type="number"
-            value={clicks}
-            onChange={(e) => setClicks(Number(e.target.value))}
             placeholder="عدد النقرات المطلوبة"
-            className="w-full border rounded p-2"
+            value={clicks}
+            onChange={(e) => setClicks(e.target.value)}
+            className="border rounded-lg p-2"
           />
-
           <input
             type="number"
-            value={points}
-            onChange={(e) => setPoints(Number(e.target.value))}
             placeholder="النقاط لكل نقرة"
-            className="w-full border rounded p-2"
+            value={points}
+            onChange={(e) => setPoints(e.target.value)}
+            className="border rounded-lg p-2"
           />
-
-          <button
-            onClick={addTask}
-            className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-          >
-            ➕ إضافة مهمة
-          </button>
         </div>
+        <button
+          onClick={handleCreateTask}
+          className="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
+        >
+          حفظ المهمة
+        </button>
+      </div>
 
-        {/* عرض المهام */}
-        <h2 className="text-xl font-bold mt-6 mb-3">📋 مهامي السابقة</h2>
-        <ul className="space-y-2">
-          {tasks.map((t) => (
-            <li
-              key={t.id}
-              className="p-3 bg-gray-50 border rounded shadow-sm"
-            >
-              <strong>{t.taskName}</strong> ({t.category})  
-              <br />
-              🎯 {t.clicks} نقرة – ⭐ {t.points} نقطة/نقرة
-            </li>
-          ))}
-        </ul>
+      {/* 🔹 عرض المهام */}
+      <div className="bg-white shadow-md rounded-lg p-4">
+        <h2 className="text-xl font-semibold mb-4">📂 مهامي السابقة</h2>
+        {tasks.length === 0 ? (
+          <p className="text-gray-500">لا توجد مهام بعد</p>
+        ) : (
+          <ul className="space-y-3">
+            {tasks.map((task) => (
+              <li
+                key={task.id}
+                className="p-3 border rounded-lg flex justify-between items-center"
+              >
+                <div>
+                  <p className="font-bold">{task.title}</p>
+                  <p className="text-sm text-gray-500">
+                    {task.category} | {task.clicks} نقرة | {task.points} نقطة
+                  </p>
+                </div>
+                <span className="text-xs text-gray-400">
+                  {task.createdAt?.toDate
+                    ? task.createdAt.toDate().toLocaleDateString()
+                    : "⏳"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
