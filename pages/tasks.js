@@ -1,7 +1,21 @@
 "use client";
 import { useState, useEffect } from "react";
-import { db } from "../lib/firebase";
-import { collection, addDoc, getDocs } from "firebase/firestore";
+import { initializeApp } from "firebase/app";
+import { getFirestore, collection, addDoc, getDocs } from "firebase/firestore";
+
+// ✅ إعداد Firebase مباشرة هنا
+const firebaseConfig = {
+  apiKey: "AIzaSyBR3RiVIGpBwmFbwycC9amdh9x6KqCir_M",
+  authDomain: "hasmen-8eba0.firebaseapp.com",
+  projectId: "hasmen-8eba0",
+  storageBucket: "hasmen-8eba0.firebasestorage.app",
+  messagingSenderId: "992187142687",
+  appId: "1:992187142687:web:c24dd992ed61ee80d43b2a",
+  measurementId: "G-70RKFK8HGX",
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 export default function Tasks() {
   const [taskName, setTaskName] = useState("");
@@ -10,10 +24,9 @@ export default function Tasks() {
   const [points, setPoints] = useState(1);
   const [tasks, setTasks] = useState([]);
 
-  // ✅ إضافة مهمة جديدة إلى Firestore
+  // ✅ إضافة مهمة جديدة
   const addTask = async () => {
     if (!taskName.trim()) return;
-
     try {
       await addDoc(collection(db, "tasks"), {
         taskName,
@@ -22,18 +35,17 @@ export default function Tasks() {
         points,
         createdAt: new Date(),
       });
-
-      alert("✅ تمت إضافة المهمة بنجاح!");
+      alert("✅ تمت إضافة المهمة!");
       setTaskName("");
       setClicks(0);
       setPoints(1);
-      fetchTasks(); // تحديث القائمة بعد الإضافة
+      fetchTasks();
     } catch (error) {
-      console.error("❌ خطأ أثناء الحفظ:", error);
+      console.error("❌ خطأ أثناء الإضافة:", error);
     }
   };
 
-  // ✅ جلب المهام من Firestore
+  // ✅ جلب المهام
   const fetchTasks = async () => {
     try {
       const querySnapshot = await getDocs(collection(db, "tasks"));
@@ -43,11 +55,10 @@ export default function Tasks() {
       }));
       setTasks(tasksData);
     } catch (err) {
-      console.error("خطأ أثناء جلب المهام:", err);
+      console.error("خطأ أثناء الجلب:", err);
     }
   };
 
-  // ✅ استخدم useEffect بدل useState
   useEffect(() => {
     fetchTasks();
   }, []);
@@ -120,4 +131,4 @@ export default function Tasks() {
       </div>
     </div>
   );
-    }
+}
