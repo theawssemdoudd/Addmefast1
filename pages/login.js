@@ -48,4 +48,4 @@ export default function Login() {
       <button onClick={handleSignup}>إنشاء حساب</button>
     </div>
   );
-}}
+}
