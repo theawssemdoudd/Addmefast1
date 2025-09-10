@@ -1,9 +1,16 @@
 import { useState, useEffect } from "react";
 import { db, auth } from "../lib/firebase";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import Navbar from "../components/Navbar";
-import Link from "next/link"; // ✅ خليها هنا فوق مش جوة JSX
+import Link from "next/link";
 
 export default function EarnPage() {
   const [user] = useAuthState(auth);
@@ -16,7 +23,7 @@ export default function EarnPage() {
       if (user) {
         q = query(collection(db, "tasks"), where("userId", "!=", user.uid));
       } else {
-        q = collection(db, "tasks"); // لو الزائر موش مسجل دخول، نعرض كل المهام
+        q = collection(db, "tasks");
       }
 
       const querySnapshot = await getDocs(q);
@@ -30,6 +37,32 @@ export default function EarnPage() {
     }
   };
 
+  // 🟢 تنفيذ المهمة (زيادة العداد في Firestore)
+  const handleDoTask = async (taskId, clicks, maxClicks) => {
+    if (clicks >= maxClicks) {
+      alert("❌ هذه المهمة اكتملت بالفعل");
+      return;
+    }
+
+    try {
+      const taskRef = doc(db, "tasks", taskId);
+      await updateDoc(taskRef, {
+        clicks: clicks + 1,
+      });
+
+      // تحديث الواجهة بعد الزيادة
+      setTasks((prevTasks) =>
+        prevTasks.map((task) =>
+          task.id === taskId ? { ...task, clicks: task.clicks + 1 } : task
+        )
+      );
+
+      alert("✅ تم تنفيذ المهمة");
+    } catch (error) {
+      console.error("خطأ أثناء تحديث المهمة:", error);
+    }
+  };
+
   useEffect(() => {
     fetchTasks();
   }, [user]);
@@ -37,7 +70,11 @@ export default function EarnPage() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
       {/* 🔹 الشريط العلوي */}
-      <Navbar user={user} username={user?.displayName} points={user?.points || 0} />
+      <Navbar
+        user={user}
+        username={user?.displayName}
+        points={user?.points || 0}
+      />
 
       {/* 🔹 المحتوى */}
       <main className="flex-1 max-w-4xl mx-auto p-6">
@@ -59,16 +96,24 @@ export default function EarnPage() {
                 <div>
                   <p className="font-bold text-lg text-gray-800">{task.title}</p>
                   <p className="text-sm text-gray-500">
-                    📂 {task.category} | 🎯 {task.clicks} نقرة | ⭐ {task.points} نقطة
+                    📂 {task.category} | 🎯 {task.clicks}/{task.maxClicks} نقرة |
+                    ⭐ {task.points} نقطة
                   </p>
                 </div>
 
-                {/* 🔹 زر ينقل لصفحة تفاصيل المهمة */}
-                <Link href={`/task/${task.id}`}>
-                  <button className="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition">
+                {/* 🔹 إذا العداد اكتمل نوقف المهمة */}
+                {task.clicks >= task.maxClicks ? (
+                  <span className="text-red-500 font-bold">✔ المهمة مكتملة</span>
+                ) : (
+                  <button
+                    onClick={() =>
+                      handleDoTask(task.id, task.clicks, task.maxClicks)
+                    }
+                    className="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition"
+                  >
                     تنفيذ المهمة
                   </button>
-                </Link>
+                )}
               </li>
             ))}
           </ul>
