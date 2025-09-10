@@ -3,6 +3,7 @@ import { db, auth } from "../lib/firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import Navbar from "../components/Navbar";
+import Link from "next/link"; // ✅ خليها هنا فوق مش جوة JSX
 
 export default function EarnPage() {
   const [user] = useAuthState(auth);
@@ -61,14 +62,13 @@ export default function EarnPage() {
                     📂 {task.category} | 🎯 {task.clicks} نقرة | ⭐ {task.points} نقطة
                   </p>
                 </div>
-                import Link from "next/link";
 
-// داخل الـ map للمهام
-<Link href={`/task/${task.id}`}>
-  <button className="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition">
-    تنفيذ المهمة
-  </button>
-</Link>
+                {/* 🔹 زر ينقل لصفحة تفاصيل المهمة */}
+                <Link href={`/task/${task.id}`}>
+                  <button className="bg-green-600 text-white px-5 py-2 rounded-lg hover:bg-green-700 transition">
+                    تنفيذ المهمة
+                  </button>
+                </Link>
               </li>
             ))}
           </ul>
@@ -81,4 +81,4 @@ export default function EarnPage() {
       </footer>
     </div>
   );
-                  }
+}
