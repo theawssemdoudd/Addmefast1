@@ -5,28 +5,20 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
-import Navbar from "../components/Navbar"; // 🔹 استدعاء الشريط العلوي
+import Navbar from "../components/Navbar"; // الشريط العلوي
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
 
-  // تسجيل حساب جديد
-  const handleSignup = async () => {
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      alert("✅ تم إنشاء الحساب");
-    } catch (error) {
-      alert("❌ " + error.message);
-    }
-  };
-
+  
   // تسجيل الدخول
   const handleLogin = async () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       alert("✅ تم تسجيل الدخول");
+      router.push("/"); // تحويل مباشرة للصفحة الرئيسية
     } catch (error) {
       alert("❌ " + error.message);
     }
@@ -52,11 +44,9 @@ export default function Login() {
           onChange={(e) => setPassword(e.target.value)}
         /><br />
         <button onClick={handleLogin}>تسجيل الدخول</button>
-        <button onClick={handleSignup}>إنشاء حساب</button>
         <br /><br />
-        {/* 🔹 زر ينقل المستخدم إلى صفحة التسجيل */}
         <button onClick={() => router.push("/register")}>
-          الانتقال إلى صفحة التسجيل
+         إنشاء حساب جديد 
         </button>
       </div>
     </div>
